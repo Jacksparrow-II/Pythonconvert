@@ -31,8 +31,46 @@ namespace Pythonconvert
         }
 
 
+        public List<Predict> Getpredit()
+        {
+            //List<Predict> customers = new List<Predict>();
+            //{
+            //    customers = objemployee.Getpredit();
+            //}
+
+            SqlConnection sc = new SqlConnection("Data Source=10.61.18.12;Initial Catalog=AR_Tool_NEW;User ID=msdba;Password=dba@123;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+
+            List<Predict> p2 = new List<Predict>();
+            SqlDataAdapter sa1 = new SqlDataAdapter("PythonpredictselectCustomer", sc);
+            DataTable dt1 = new DataTable();
+            sa1.SelectCommand.CommandType = CommandType.StoredProcedure;
+            sc.Open();
+            sa1.Fill(dt1);
+            sc.Close();
+            foreach (DataRow dr in dt1.Rows)
+            {
+                p2.Add(
+                    new Predict
+                    {
+                        CustomerNo = Convert.ToString(dr["CustomerNo"]),
+                    }
+                    );
+            }
+
+            return p2;
+
+
+        }
+
         public List<Customer> GetCustomer()
         {
+            ////List<Customer> data = new List<Customer>();
+            //s2 = objemployee.GetCustomers().ToList();
+            //Customer p2 = new Customer
+            //{
+            //    CustomerNo = Getpredit();
+            //};
+
             SqlConnection sc = new SqlConnection("Data Source=10.61.18.12;Initial Catalog=AR_Tool_NEW;User ID=msdba;Password=dba@123;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
             List<Customer> s2 = new List<Customer>();
             SqlDataAdapter sa = new SqlDataAdapter("Pythonselectcustomer", sc);
@@ -54,6 +92,7 @@ namespace Pythonconvert
                     }
                     );
             }
+                        
 
             //foreach (var cust in s2)
             //{
@@ -64,34 +103,103 @@ namespace Pythonconvert
                                  group c by c.CustomerNo into x
                                  select new { customerNo = x.Key, predictDays = x.Average(y => y.OverDueDays) }).ToList();
 
+            
+            List<Predict> p2 = new List<Predict>();
+            SqlDataAdapter sa1 = new SqlDataAdapter("PythonpredictselectCustomer", sc);
+            DataTable dt1 = new DataTable();
+            sa1.SelectCommand.CommandType = CommandType.StoredProcedure;
+            //sc.Open();
+            sa1.Fill(dt1);
+            sc.Close();
+            foreach (DataRow dr in dt1.Rows)
+            {
+                p2.Add(
+                    new Predict
+                    {
+                        CustomerNo = Convert.ToString(dr["CustomerNo"]),
+                    }
+                    );
+            }
+
             SqlCommand sqlCommand = new SqlCommand();
             sqlCommand.Connection = sc;
             sqlCommand.CommandType = CommandType.Text;
             sc.Open();
 
-
-            foreach (var result in groupedResult)
+            foreach (var tast in groupedResult)
             {
-                Console.WriteLine("{0}    {1}", result.customerNo, result.predictDays.ToString());
-
-                foreach (var sat in s2)
+                bool CustomerNoexist = p2.Any(x => x.CustomerNo == tast.customerNo);
+                if (CustomerNoexist == false)
                 {
-                    if (sat.IsExist == 0)
-                    {
-                        var test = "INSERT into Predicted_Data(CustomerNo, PredictedDays) values('" + result.customerNo + "'," + result.predictDays + ") ";
-                        sqlCommand.CommandText = test;
-                    }
-                    else
-                    {
-                        var test = "UPDATE Predicted_Data SET PredictedDays = " + result.predictDays + " where CustomerNo = '" + result.customerNo + "' ";
-                        sqlCommand.CommandText = test;
-                    }
+                    var test = "INSERT into Predicted_Data(CustomerNo, PredictedDays) values('" + tast.customerNo + "'," + tast.predictDays + ") ";
+                    sqlCommand.CommandText = test;
+                    int output = sqlCommand.ExecuteNonQuery();
+                    Console.WriteLine(output);
+
+                }
+                else 
+                {
+                    var test = "UPDATE Predicted_Data SET PredictedDays = " + tast.predictDays + " where CustomerNo = '" + tast.customerNo + "' ";
+                    sqlCommand.CommandText = test;
+                    int output = sqlCommand.ExecuteNonQuery();
+                    Console.WriteLine(output);
                 }
 
 
-                int output = sqlCommand.ExecuteNonQuery();
-                Console.WriteLine(output);
-            }
+                    //var Cust = p2.FirstOrDefault(x => x.CustomerNo == tast.customerNo);
+                    //if (Cust != null)
+                    //{
+                    //    var test = "INSERT into Predicted_Data(CustomerNo, PredictedDays) values('" + tast.customerNo + "'," + tast.predictDays + ") ";
+                    //}
+
+                    //Console.WriteLine("{0}    {1}", tast.customerNo, tast.predictDays.ToString());
+
+                    //foreach (var toss in p2)
+                    //{
+                    //    if (toss.CustomerNo != tast.customerNo)
+                    //    {
+                    //        var test = "INSERT into Predicted_Data(CustomerNo, PredictedDays) values('" + tast.customerNo + "'," + tast.predictDays + ") ";
+                    //        sqlCommand.CommandText = test;
+                    //    }
+                    //    else if (toss.CustomerNo == tast.customerNo)
+                    //    {
+                    //        var test = "UPDATE Predicted_Data SET PredictedDays = " + tast.predictDays + " where CustomerNo = '" + tast.customerNo + "' ";
+                    //        sqlCommand.CommandText = test;
+                    //    }
+                    //    int output = sqlCommand.ExecuteNonQuery();
+                    //    Console.WriteLine(output);
+                }
+
+            
+
+            //}
+
+
+            //foreach (var result in groupedResult)
+            //{
+            //    Console.WriteLine("{0}    {1}", result.customerNo, result.predictDays.ToString());
+
+            //    foreach (var sat in s2)
+            //    {
+            //        if (sat.IsExist == 0)
+            //        {
+            //            if (result.customerNo != sat.CustomerNo)
+            //            {
+            //                var test = "insert into predicted_data(customerno, predicteddays) values('" + result.customerNo + "'," + result.predictDays + ") ";
+            //                sqlCommand.CommandText = test;
+            //            }
+            //            //var test = "insert into predicted_data(customerno, predicteddays) values('" + result.customerno + "'," + result.predictdays + ") ";
+            //            //sqlcommand.commandtext = test;
+            //        }
+            //        else
+            //        {
+            //            var test = "update predicted_data set predicteddays = " + result.predictDays + " where customerno = '" + result.customerNo + "' ";
+            //            sqlCommand.CommandText = test;
+            //        }
+            //    }
+            //    int output = sqlCommand.ExecuteNonQuery();
+            //    Console.WriteLine(output);
+            //}
 
 
             //List<CustomerwiseOverdue> lstCustomerwiseOverdue = new List<CustomerwiseOverdue>();
@@ -134,6 +242,7 @@ namespace Pythonconvert
             //p.SelectData();
             //p.getgroupby();
             p.GetCustomer();
+            p.Getpredit();
             //p.Addcust();
             Console.ReadLine();
         }
